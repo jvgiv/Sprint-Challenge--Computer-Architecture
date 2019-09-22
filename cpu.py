@@ -8,15 +8,15 @@ class CPU:
         self.pc = 0 
         self.sp = 7 
         self.reg[self.sp] = 244 
-        self.e = 7 # FL[7] is reserved for equal
-        self.fl = [0] * 8 # The register is made up of 8 bits. If a particular bit is set, that flag is "true".
+        self.e = 7 
+        self.fl = [0] * 8 
 
     def load(self):
 
         address = 0
 
         if len(sys.argv) != 2:
-            print("Pass a filename argument when calling this file")
+            print("need to pass a filename as an argument!")
             sys.exit(1)
 
         try:
@@ -28,12 +28,12 @@ class CPU:
                         address += 1
 
         except FileNotFoundError:
-            print("file not found")
+            print("Could not find that file")
             sys.exit(2)
 
 
     def halt(self):
-        print('Halting the program')
+        print('Program Halted')
         sys.exit(1)
 
     def ram_read(self, mar):
@@ -43,33 +43,33 @@ class CPU:
         self.ram[mar] = mdr
 
 
-    def alu(self, op_code, reg_a, reg_b):
+    def alu(self, operation_code, register_a, register_b):
         """ALU operations."""
 
-        if op_code == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
-        elif op_code == "MUL":
-            self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
-        elif op_code == "AND":
-            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
-        elif op_code == "DEC":
-            self.reg[reg_a] -= 1
-        elif op_code == "INC":
-            self.reg[reg_a] += 1
-        elif op_code == "CMP":
-            if self.reg[reg_a] == self.reg[reg_b]:
+        if operation_code == "ADD":
+            self.reg[register_a] += self.reg[register_b]
+        elif operation_code == "MUL":
+            self.reg[register_a] = self.reg[register_a] * self.reg[register_b]
+        elif operation_code == "AND":
+            self.reg[register_a] = self.reg[register_a] & self.reg[register_b]
+        elif operation_code == "DEC":
+            self.reg[register_a] -= 1
+        elif operation_code == "INC":
+            self.reg[register_a] += 1
+        elif operation_code == "CMP":
+            if self.reg[register_a] == self.reg[register_b]:
                 self.fl[self.e] = 1
             else:
                 self.fl[self.e] = 0
-        elif op_code == "MOD":
-            self.reg[reg_a] = self.reg[reg_a] % self.reg[reg_b]
-        elif op_code == "DIV":
-            if self.reg[reg_b] != 0:
-                self.reg[reg_a] = self.reg[reg_a] / self.reg[reg_b]
+        elif operation_code == "MOD":
+            self.reg[register_a] = self.reg[register_a] % self.reg[register_b]
+        elif operation_code == "DIV":
+            if self.reg[register_b] != 0:
+                self.reg[register_a] = self.reg[register_a] / self.reg[register_b]
             else:
                 self.halt()
         else:
-            raise Exception("Unsupported ALU operation")
+            raise Exception("Cannot process that ALU")
 
     def trace(self):
         """
@@ -113,11 +113,11 @@ class CPU:
         while self.pc < len(self.ram):
 
             command = self.ram[self.pc]
-            num_operands = (command & 0b11000000) >> 6
+            num_ops = (command & 0b11000000) >> 6
 
-            if num_operands == 1:
+            if num_ops == 1:
                 operand_a = self.ram_read(self.pc + 1)
-            elif num_operands == 2:
+            elif num_ops == 2:
                 operand_a = self.ram_read(self.pc + 1)
                 operand_b = self.ram_read(self.pc + 2)
 
@@ -167,11 +167,11 @@ class CPU:
                 if self.fl[self.e] == 0:
                     self.pc = self.reg[operand_a]
                 else:
-                    self.pc += num_operands + 1
+                    self.pc += num_ops + 1
             elif command == JEQ:
                 if self.fl[self.e] == 1:
                     self.pc = self.reg[operand_a]
                 else:
-                    self.pc += num_operands + 1
+                    self.pc += num_ops + 1
             else:
-                self.pc += num_operands + 1
+                self.pc += num_ops + 1
